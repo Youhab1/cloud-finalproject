@@ -1,0 +1,104 @@
+version: '3.9'
+services:
+  sign-service:
+    build:
+      context: ./sign
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    restart: always
+    networks:
+      - my-network
+    depends_on:
+      - mongodb
+
+  user-service:
+    build:
+      context: ./userinfo
+      dockerfile: Dockerfile
+    ports:
+      - 3200:3200
+    restart: always
+    networks:
+      - my-network
+    depends_on:
+      - mongodb
+
+  inventory-service:
+    build:
+      context: ./inventory
+      dockerfile: Dockerfile
+    ports:
+      - 3400:3400
+    restart: always
+    networks:
+      - my-network
+    depends_on:
+      - inventory-db
+
+  addtocart-service:
+    build:
+      context: ./cart
+      dockerfile: Dockerfile
+    ports:
+      - 3700:3700
+    restart: always
+    networks:
+      - my-network
+    depends_on:
+      - inventory-db
+
+  website-jewelry:
+    build:
+      context: ./website
+      dockerfile: Dockerfile
+    volumes:
+      - ./website:/usr/share/nginx/html
+    ports:
+      - 4000:4000
+    restart: always
+    networks:
+      - my-network
+    depends_on:
+      - sign-service
+      - user-service
+      - inventory-service
+      - addtocart-service
+      - mongodb
+      - inventory-db
+
+  mongodb:
+    image: mongo:latest
+    container_name: my-mongodb
+    ports:
+      - 27017:27017
+    restart: always
+    volumes:
+      - ./mongo-data:/data/db
+    networks:
+      - my-network
+
+  inventory-db:
+    image: mongo:latest
+    container_name: inventory-mongodb
+    ports:
+      - 27018:27017
+    restart: always
+    volumes:
+      - ./inventory-mongo-data:/data/db
+    networks:
+      - my-network
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 80:80
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge

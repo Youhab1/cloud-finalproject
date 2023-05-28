@@ -1,0 +1,16 @@
+{
+    "name": "myapp",
+    "version": "1.0.0",
+    "description": "My App",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "cors": "^2.8.5",
+      "express-validator": "^6.12.1",
+       "mongoose": "^6.0.0"
+    }
+  }
+  

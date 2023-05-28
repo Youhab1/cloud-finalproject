@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Pearla Jewelry</title>
+    <link rel="stylesheet" type="text/css" href="frontend.css">
+    <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/bellada">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+   
+
+</head>
+
+<body>
+    <nav>
+        <!-- WebsiteName -->
+        <div class="nav-left">
+            <a href="home.html" class="logo">Pearla Jewelry</a>
+        </div>
+
+        <!-- Categories -->
+        <div class="nav-center pullDown">
+            <a href="home.html" class="x notvisited">Home</a>
+            <a href="gold.html" class="x notvisited">Gold</a>
+            <a href="diamond.html" class="x notvisited">Diamond</a>
+            <a href="about.html" class="x notvisited">About Us</a>
+            <a href="search.html" class="x notvisited">Search</a>
+            <a href="order.html" class="x visited">My Orders</a>
+        </div>
+
+        <!-- Search -->
+        <!-- <input type="search" class="search" placeholder="Search"> -->
+
+        <!-- cart and profile -->
+        <div class="nav-right">
+            <a href="cart.html" class="y"><i class="fa fa-shopping-cart" style="margin-left: 50px;"></i></a>
+            <nav>
+                <ul>
+                    <li>
+                        <a class="nav y" style="margin-bottom: 13px;"><i class="fa fa-user"
+                                style="margin-right: 20px;"></i></a>
+                                <div class="dropdown main" id="userDropdown">
+                                    <div class="profile">
+                                          <center>
+                                            <h1>My Account</h1>
+                                            <i class="fa fa-user fa-5x profile"></i>
+                                          </center>
+                                          <br><br>
+                                          <div class="info">
+                                            <strong>Name:</strong><br>
+                                            <span id="username"></span><br><br>
+                                            <strong>Email:</strong><br>
+                                            <span id="email"></span><br><br>
+                                            <strong>Phone Number:</strong><br>
+                                            <span id="phone"></span><br><br>
+                                          </div>
+                                          <center>
+                                            <div class="tabs">Account Settings</div>
+                                            <div class="tabs"><a href="order.html" class="profilebutton"> My Orders </a></div>
+                                            <div class="tabs">Help</div>
+                                            <div class="tabs"><a href="login.html" class="profilebutton"> Log Out </a></div>
+                                          </center>
+                                    </div>                                 
+                                </div>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </nav>
+
+
+    <header>
+        <h2>My Orders</h2>
+    </header>
+
+
+      <div id="ordersContainer"></div>
+
+<button class="resetOrderHistory" onclick="resetOrderHistory()">Reset Order History</button>
+
+    <script>
+
+document.addEventListener('DOMContentLoaded', () => {
+    printOrders();
+  });
+
+function printOrders() {
+  const orders = JSON.parse(localStorage.getItem("Orders"));
+
+  if (!orders || orders.length === 0) {
+    const ordersContainer = document.querySelector("#ordersContainer");
+    ordersContainer.innerHTML = "<p>No orders found.</p>";
+    return;
+  }
+
+  const ordersContainer = document.querySelector("#ordersContainer");
+  ordersContainer.innerHTML = "";
+
+  for (const order of orders) {
+    const { orderNumber, paymentMethod, totalAmount, itemCount } = order;
+
+    const orderDiv = document.createElement("div");
+    orderDiv.classList.add("order");
+
+    const orderNumberElement = document.createElement("h3");
+    orderNumberElement.classList.add("order-number");
+    orderNumberElement.textContent = `Order Number: ${orderNumber}`;
+    orderDiv.appendChild(orderNumberElement);
+
+    const paymentMethodElement = document.createElement("p");
+    paymentMethodElement.textContent = `Payment Method: ${paymentMethod}`;
+    orderDiv.appendChild(paymentMethodElement);
+
+    const totalAmountElement = document.createElement("p");
+    totalAmountElement.textContent = `Total Amount: ${totalAmount}`;
+    orderDiv.appendChild(totalAmountElement);
+
+    const itemCountElement = document.createElement("p");
+    itemCountElement.textContent = `Item Count: ${itemCount}`;
+    orderDiv.appendChild(itemCountElement);
+
+    ordersContainer.appendChild(orderDiv);
+  }
+}
+
+
+        
+        const userLink = document.querySelector('.nav.y');
+        const userDataContainer = document.getElementById('userDataContainer');
+    
+        userLink.addEventListener('mouseover', async () => {
+        const username = localStorage.getItem("username");
+    
+        let url = 'http://localhost/userdata';
+        let queryParameters = [];
+    
+        if (username) {
+          queryParameters.push(`username=${encodeURIComponent(username)}`);
+        }
+    
+        if (queryParameters.length > 0) {
+          url += `?${queryParameters.join('&')}`;
+        }
+    
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+    
+          if (response.ok) {
+            // Display user data in the dropdown menu
+            const { username, email, phone } = data;
+            document.getElementById('username').textContent = username;
+            document.getElementById('email').textContent = email;
+            document.getElementById('phone').textContent = phone;
+    
+            // Show the dropdown menu
+            userLink.classList.add('active');
+          } else {
+            // Display error message
+            userDataContainer.textContent = data.message;
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          userDataContainer.textContent = 'Error fetching user data. Please try again.';
+        }
+      });
+    
+      userLink.addEventListener('mouseleave', () => {
+        // Hide the dropdown menu
+        userLink.classList.remove('active');
+      });
+
+
+      function resetOrderHistory() {
+        // Clear the stored orders from localStorage
+        localStorage.removeItem("Orders");
+
+        // Optional: Clear any other relevant stored data
+        localStorage.removeItem("OrderNumber");
+        localStorage.removeItem("PaymentMethod");
+        localStorage.removeItem("TotalAmount");
+        localStorage.removeItem("ItemCount");
+
+        // Reload the page
+        location.reload();
+        }
+
+    </script>
+</body>
+
+</html>

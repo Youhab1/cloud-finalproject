@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Pearla Jewelry</title>
+  <link rel="stylesheet" type="text/css" href="frontend.css">
+  <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/bellada">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</head>
+
+<body>
+  <nav>
+    <!-- WebsiteName -->
+    <div class="nav-left">
+      <a href="home.html" class="logo">Pearla Jewelry</a>
+    </div>
+
+    <!-- Categories -->
+    <div class="nav-center pullDown">
+      <a href="home.html" class="x notvisited">Home</a>
+      <a href="gold.html" class="x notvisited">Gold</a>
+      <a href="diamond.html" class="x notvisited">Diamond</a>      
+      <a href="about.html" class="x notvisited">About Us</a>
+      <a href="search.html" class="x notvisited">Search</a>
+      <a href="order.html" class="x notvisited">My Orders</a>
+
+    </div>
+
+    <!-- Search -->
+    <!-- <input type="search" class="search" placeholder="Search"> -->
+
+    <!-- cart and profile -->
+    <div class="nav-right">
+      <a href="cart.html" class="y"><i class="fa fa-shopping-cart visited" style="margin-left: 50px;"></i></a>
+      <nav>
+        <ul>
+          <li>
+            <a class="nav y" style="margin-bottom: 13px;"><i class="fa fa-user" style="margin-right: 20px;"></i></a>
+            <div class="dropdown main" id="userDropdown">
+              <div class="profile">
+                    <center>
+                      <h1>My Account</h1>
+                      <i class="fa fa-user fa-5x profile"></i>
+                    </center>
+                    <br><br>
+                    <div class="info">
+                      <strong>Name:</strong><br>
+                      <span id="username"></span><br><br>
+                      <strong>Email:</strong><br>
+                      <span id="email"></span><br><br>
+                      <strong>Phone Number:</strong><br>
+                      <span id="phone"></span><br><br>
+                    </div>
+                    <center>
+                      <div class="tabs">Account Settings</div>
+                      <div class="tabs"><a href="order.html" class="profilebutton"> My Orders </a></div>
+                      <div class="tabs">Help</div>
+                      <div class="tabs"><a href="login.html" class="profilebutton"> Log Out </a></div>
+                    </center>
+              </div>                                 
+          </div>
+          </li>
+        </ul>
+      </nav>
+
+    </div>
+  </nav>
+
+
+  <header>
+    <h2>Cart</h2>
+  </header>
+
+      <ul id="cartItems" class="cart-items"></ul>
+      <div class="cart-total">
+        <div>
+          <h3>Payment Method:</h3><input type="checkbox"> Cash on Delivery
+        </div>
+        <div class="pricewbutton">
+          <strong><h2 id="totalPrice"></h2></strong>   
+          <button id="checkoutButton" class="checkout" >Checkout</button>
+        </div>
+      </div>
+
+<!-- 
+      <button onclick="printOrders()">my orders</button>
+
+      <div id="ordersContainer"></div> -->
+
+  <script>
+        
+    const userLink = document.querySelector('.nav.y');
+    const userDataContainer = document.getElementById('userDataContainer');
+
+    userLink.addEventListener('mouseover', async () => {
+    const username = localStorage.getItem("username");
+
+    let url = 'http://localhost/userdata';
+    let queryParameters = [];
+
+    if (username) {
+      queryParameters.push(`username=${encodeURIComponent(username)}`);
+    }
+
+    if (queryParameters.length > 0) {
+      url += `?${queryParameters.join('&')}`;
+    }
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (response.ok) {
+        // Display user data in the dropdown menu
+        const { username, email, phone } = data;
+        document.getElementById('username').textContent = username;
+        document.getElementById('email').textContent = email;
+        document.getElementById('phone').textContent = phone;
+
+        // Show the dropdown menu
+        userLink.classList.add('active');
+      } else {
+        // Display error message
+        userDataContainer.textContent = data.message;
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      userDataContainer.textContent = 'Error fetching user data. Please try again.';
+    }
+  });
+
+  userLink.addEventListener('mouseleave', () => {
+    // Hide the dropdown menu
+    userLink.classList.remove('active');
+  });
+
+
+
+
+const cartItemsList = document.getElementById('cartItems');
+const totalPriceElement = document.getElementById('totalPrice');
+const checkoutButton = document.getElementById('checkoutButton');
+const cashOnDeliveryCheckbox = document.querySelector('input[type="checkbox"]');
+
+let cartItems = [];
+
+const removeCartItem = async (productId) => {
+  try {
+    const response = await fetch('http://localhost/cart/removefromcart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productId })
+    });
+
+    const data = await response.json();
+    console.log(data.message);
+
+    // Fetch and update cart items
+    fetchCartItems();
+  } catch (error) {
+    console.error('Error removing item from cart:', error);
+  }
+};
+
+checkoutButton.addEventListener('click', async () => {
+  if (!cashOnDeliveryCheckbox.checked) {
+    alert('Please check the payment method checkbox before checking out.');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost/cart/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ cartItems: cartItems })
+    });
+
+    const data = await response.json();
+    // alert(data.message);
+    const orderNumber = data.order.orderNumber;
+    const paymentMethod = data.order.paymentMethod;
+    const totalAmount = data.order.totalPrice;
+    const itemCount = data.order.items.length;
+
+    localStorage.setItem("OrderNumber", orderNumber);
+    localStorage.setItem("PaymentMethod", paymentMethod);
+    localStorage.setItem("TotalAmount", totalAmount);
+    localStorage.setItem("ItemCount", itemCount);
+    storeOrder();
+
+    const message = `Order Number: ${orderNumber}\nPayment Method: ${paymentMethod}\nTotal Amount: ${totalAmount}\nItem Count: ${itemCount}`;
+    
+    alert(message);
+
+    // Clear the cart after successful checkout
+    updateCartDisplay();
+
+    // Remove cart items one by one
+    while (cartItems.length > 0) {
+      const productId = cartItems[0].productId;
+      await removeCartItem(productId);
+    }
+  } catch (error) {
+    alert('Cart is Empty', error);
+    fetchCartItems();
+  }
+});
+
+const fetchCartItems = async () => {
+  try {
+    const response = await fetch('http://localhost/cart/cartlist');
+    const data = await response.json();
+    cartItems = data.cartItems;
+
+    updateCartDisplay();
+  } catch (error) {
+    console.error('Error fetching cart items:', error);
+  }
+};
+
+const updateCartDisplay = () => {
+  // Clear previous cart items
+  cartItemsList.innerHTML = '';
+
+  if (cartItems.length === 0) {
+    cartItemsList.innerHTML = '<li>No items in the cart.</li>';
+  } else {
+    cartItems.forEach((item) => {
+      const cartItemContainer = document.createElement('div');
+      cartItemContainer.classList.add('cart-item');
+      cartItemContainer.classList.add('boxx');
+      cartItemContainer.classList.add('orderelement');
+
+      const itemDetails = document.createElement('div');
+      itemDetails.classList.add('item-details');
+
+      const productName = document.createElement('h3');
+      productName.textContent = item.productName;
+
+      const price = document.createElement('p');
+      price.textContent = `Price: ${item.price} EGP`;
+
+      const removeButton = document.createElement('button');
+      removeButton.classList.add('remove');
+
+      removeButton.textContent = 'Remove';
+      removeButton.style.backgroundColor = '#bb966c';
+
+      // Add event listener to remove the item from the cart
+      removeButton.addEventListener('click', () => {
+        removeCartItem(item.productId);
+      });
+
+      itemDetails.appendChild(productName);
+      itemDetails.appendChild(price);
+      itemDetails.appendChild(removeButton);
+
+      cartItemContainer.appendChild(itemDetails);
+
+
+      cartItemContainer.addEventListener('click', (event) => {
+      if (!event.target.classList.contains('remove')) {
+        localStorage.setItem("productid", item.productId);
+        window.location.href = `product.html`;
+      }
+    });
+      cartItemsList.appendChild(cartItemContainer);
+    });
+  }
+
+  const totalPrice = calculateTotalPrice(cartItems);
+  totalPriceElement.textContent = `Total Price: ${totalPrice} EGP`;
+};
+
+const calculateTotalPrice = (items) => {
+  let total = 0;
+  for (const item of items) {
+    total += item.price;
+  }
+  return total;
+};
+
+// Fetch and display initial cart items
+fetchCartItems();
+
+function storeOrder() {
+  const orderNumber = localStorage.getItem("OrderNumber");
+  const paymentMethod = localStorage.getItem("PaymentMethod");
+  const totalAmount = localStorage.getItem("TotalAmount");
+  const itemCount = localStorage.getItem("ItemCount");
+
+  const order = {
+    orderNumber,
+    paymentMethod,
+    totalAmount,
+    itemCount
+  };
+
+  // Retrieve the existing orders from localStorage or initialize an empty array
+  const orders = JSON.parse(localStorage.getItem("Orders")) || [];
+
+  // Add the current order to the array of orders
+  orders.push(order);
+
+  // Store the updated array of orders in localStorage
+  localStorage.setItem("Orders", JSON.stringify(orders));
+}
+
+</script>
+</body>
+
+</html>
